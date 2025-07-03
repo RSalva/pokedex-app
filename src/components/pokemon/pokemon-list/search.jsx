@@ -1,6 +1,6 @@
 function Search({ search, onSearch }) {
   return (
-    <div className="form-group mb-3 ">
+    <div className="form-group mb-3 mx-2">
       <input
         value={search}
         onChange={(event) => {
