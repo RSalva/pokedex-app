@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pagination, PokemonList, Search } from "../components/pokemon";
 import { getPokemonListData, listPokemon } from "../services/poke-api";
 
@@ -10,6 +10,9 @@ function HomePage({ pokemonsByPage = 20 }) {
 
   const totalPokemons = 1300;
 
+  const timeoutRef = useRef(null);
+
+  // Pagination
   useEffect(() => {
     async function fetchPokemons() {
       try {
@@ -17,7 +20,7 @@ function HomePage({ pokemonsByPage = 20 }) {
         const currentPokemons = await listPokemon(
           page * pokemonsByPage,
           pokemonsByPage, 
-          search
+          ""
         );
         console.debug("Current 20 pokemons:", currentPokemons);
         const pokemonList = await getPokemonListData(currentPokemons);
@@ -29,9 +32,36 @@ function HomePage({ pokemonsByPage = 20 }) {
       }
     }
     fetchPokemons();
-  }, [pokemonsByPage, page, search]);
+  }, [pokemonsByPage, page]);
 
-  const pokemonList = currentPokemonList.filter((p) => p.name.includes(search));
+  // Search
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      async function fetchSearchedPokemons() {
+        setIsLoading(true);
+        try {
+          const currentPokemons = await listPokemon(
+            page * pokemonsByPage,
+            pokemonsByPage, 
+            search
+          );
+          console.debug("Current 20 pokemons:", currentPokemons);
+          const pokemonList = await getPokemonListData(currentPokemons);
+          setCurrentPokemonList(pokemonList);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      fetchSearchedPokemons();
+    }, 2000);
+  }, [search]);
+
+  //const pokemonList = currentPokemonList.filter((p) => p.name.includes(search));
 
   const handleSearch = (search) => {
     setSearch(search);
@@ -40,10 +70,8 @@ function HomePage({ pokemonsByPage = 20 }) {
   const handlePageChange = (page) => {
     console.debug();
     if (page <= 0) {
-      console.debug("Page is <= 0 -->", page);
       setPage(0);
     } else if (page >= totalPokemons / pokemonsByPage) {
-      console.debug("Page is last one -->", page);
       setPage(totalPokemons / pokemonsByPage);
     } else {
       setPage(page);
@@ -54,7 +82,7 @@ function HomePage({ pokemonsByPage = 20 }) {
     <div className="container">
       <Search search={search} onSearch={handleSearch} />
       <div className="pokemon-list-wrapper">
-        <PokemonList pokemonList={pokemonList} isLoading={isLoading} />
+        <PokemonList pokemonList={currentPokemonList} isLoading={isLoading} />
       </div>
       <div className="d-flex justify-content-center mt-3">
         {!search && <Pagination onPageChange={handlePageChange} page={page} />}

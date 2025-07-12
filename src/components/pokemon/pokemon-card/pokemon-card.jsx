@@ -9,7 +9,7 @@ function PokemonCard({ pokemon, isLoading }) {
           className="card-img-top"
           src="../../../../src/assets/images/loading/loading-pokeball.gif"
           alt="loading"
-          style={{ height: "100px" }}
+          style={{ height: "170px", width: "246.39" }}
         />
       </div>
     );
@@ -27,7 +27,7 @@ function PokemonCard({ pokemon, isLoading }) {
           style={{ height: "100px" }}
         />
         <div className="card-body d-flex flex-column justify-content-end pb-1">
-          <h5 className="card-title">{pokemon.name.toUpperCase()}</h5>
+          <h5 className="card-title">{pokemon.name?.toUpperCase()}</h5>
           <Link
             to={`/pokemon/${pokemon.id}`}
             className="stretched-link text-decoration-none"

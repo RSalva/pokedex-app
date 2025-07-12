@@ -13,12 +13,12 @@ function Pagination({ onPageChange, page }) {
           </button>
         </li>
         <li className={page > 0 ? "page-item active" : "page-item"} >
-          <button className={"page-link"} onClick={() => onPageChange(page) } >
+          <button className={"page-link"} onClick={() => (page === 0) ? onPageChange(page + 1) : onPageChange(page) } >
             {page <= 0 ? 2 : page + 1}  
           </button>
         </li>
         <li className={"page-item"}>
-          <button className={"page-link"} onClick={() => onPageChange(page + 1) } >
+          <button className={"page-link"} onClick={() => (page === 0) ? onPageChange(page + 2) : onPageChange(page + 1) } >
             {page < 2 ? 3 : page + 2}
           </button>
         </li>

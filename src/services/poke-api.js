@@ -26,20 +26,53 @@ const http = setupCache(instance, {
   //debug: console.debug,
 });
 
-function parsePokemon(pokemon) {
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+async function parsePokemon(pokemon) {
+  //console.debug("Pokemon info to parse", pokemon);
+  const habitatAndDescription = await getPokemonHabitat(pokemon);
   return {
     id: pokemon.id,
     name: pokemon.name,
-    image: pokemon.sprites.other
+    image: pokemon.sprites.other.dream_world.front_default
       ? pokemon.sprites.other.dream_world.front_default
       : pokemon.sprites.front_shiny,
     types: pokemon.types.map(parseType),
     abilities: pokemon.abilities,
-    baseExperience: pokemon.baseExperience,
     cries: pokemon.cries.latest ? pokemon.cries.latest : pokemon.cries.legacy,
     height: pokemon.height,
-    moves: pokemon.moves,
     weight: pokemon.weight,
+    evolutions: await getPokemonChainEvolutions(pokemon),
+    habitat: habitatAndDescription.habitat,
+    description: habitatAndDescription.description,
+    statistics: {
+      labels: [
+        capitalize(pokemon.stats[0].stat.name),
+        capitalize(pokemon.stats[1].stat.name),
+        capitalize(pokemon.stats[2].stat.name),
+        capitalize(pokemon.stats[3].stat.name),
+        capitalize(pokemon.stats[4].stat.name),
+        capitalize(pokemon.stats[5].stat.name),
+      ],
+      datasets: [
+        {
+          label: "Stats",
+          data: [
+            pokemon.stats[0].base_stat,
+            pokemon.stats[1].base_stat,
+            pokemon.stats[2].base_stat,
+            pokemon.stats[3].base_stat,
+            pokemon.stats[4].base_stat,
+            pokemon.stats[5].base_stat,
+          ],
+          fill: true,
+          backgroundColor: "rgba(0, 0, 255, 0.6)",
+          borderColor: "rgba(0, 0, 255, 0.8)"
+        },
+      ],
+    },
   };
 }
 
@@ -70,71 +103,71 @@ function parseType({ type: { name } }) {
         name,
         icon: electricicon,
       };
-      case "fairy":
+    case "fairy":
       return {
         name,
-        icon: fairyicon
-      }
-      case "fighting":
+        icon: fairyicon,
+      };
+    case "fighting":
       return {
         name,
-        icon: fightingicon
-      }
-      case "flying":
+        icon: fightingicon,
+      };
+    case "flying":
       return {
         name,
-        icon: flyingicon
-      }
-      case "ghost":
+        icon: flyingicon,
+      };
+    case "ghost":
       return {
         name,
-        icon: ghosticon
-      }
-      case "grass":
+        icon: ghosticon,
+      };
+    case "grass":
       return {
         name,
-        icon: grassicon
-      }
-      case "ground":
+        icon: grassicon,
+      };
+    case "ground":
       return {
         name,
-        icon: groundicon
-      }
-      case "ice":
+        icon: groundicon,
+      };
+    case "ice":
       return {
         name,
-        icon: iceicon
-      }
-      case "normal":
+        icon: iceicon,
+      };
+    case "normal":
       return {
         name,
-        icon: normalicon
-      }
-      case "poison":
+        icon: normalicon,
+      };
+    case "poison":
       return {
         name,
-        icon: poisonicon
-      }
-      case "psychic":
+        icon: poisonicon,
+      };
+    case "psychic":
       return {
         name,
-        icon: psychicicon
-      }
-      case "rock":
+        icon: psychicicon,
+      };
+    case "rock":
       return {
         name,
-        icon: rockicon
-      }
-      case "steel":
+        icon: rockicon,
+      };
+    case "steel":
       return {
         name,
-        icon: steelicon
-      }
-      case "water":
+        icon: steelicon,
+      };
+    case "water":
       return {
         name,
-        icon: watericon
-      }
+        icon: watericon,
+      };
     default:
       return {
         name,
@@ -144,24 +177,24 @@ function parseType({ type: { name } }) {
 }
 
 export async function listPokemon(offset, limit, search) {
-  const response = await (search === "" ? 
-    http.get(`${baseApiUrl}/pokemon?limit=${limit}&offset=${offset}`) :
-    http.get(`${baseApiUrl}/pokemon?limit=1302&offset=0`));
+  const response = await (search === ""
+    ? http.get(`${baseApiUrl}/pokemon?limit=${limit}&offset=${offset}`)
+    : http.get(`${baseApiUrl}/pokemon?limit=1302&offset=0`));
 
-  console.debug("Main petition", response);
+  //console.debug("Main petition", response);
   const pokemonList = response.data.results;
-  return search === "" ? pokemonList : 
-    pokemonList.filter((pokemon) => pokemon.name.includes(search.toLowerCase()));
+  return search === ""
+    ? pokemonList
+    : pokemonList.filter((pokemon) =>
+        pokemon.name.includes(search.toLowerCase())
+      );
 }
 
 export async function getPokemonListData(pokemonList) {
   const pokemons = await Promise.all(
-    pokemonList.map((pokemon) => http.get(pokemon.url))
+    pokemonList.map((pokemon) => http.get(pokemon.url).then(({ data }) => parsePokemon(data)))
   );
-  return pokemons.map(({ data }) => {
-    console.debug(data.name, data);
-    return parsePokemon(data);
-  });
+  return pokemons;
 }
 
 export async function getPokemonById(pokemonId) {
@@ -172,5 +205,35 @@ export async function getPokemonById(pokemonId) {
 }
 
 export async function filterPokemon(search, pokemonsList) {
-  return getPokemonListData(pokemonsList.filter((pokemon) => pokemon.name.includes(search)));
+  return getPokemonListData(
+    pokemonsList.filter((pokemon) => pokemon.name.includes(search))
+  );
+}
+
+export async function getPokemonHabitat(pokemon) {
+  const response = await http.get(
+    `${baseApiUrl}/pokemon-species/${pokemon.species.name}`
+  );
+  //console.debug("Pokemon Specie data: ", response.data);
+  const description = response.data.flavor_text_entries.find(
+    (entry) => entry.language.name === "en"
+  )?.flavor_text;
+  const habitat = response.data.habitat.name;
+  return { description: description, habitat: habitat };
+}
+
+export async function getPokemonChainEvolutions(pokemon) {
+  const response = await http.get(
+    `${baseApiUrl}/evolution-chain/${pokemon.id}`
+  );
+  //console.debug("Pokemon chain evolutions:", response.data);
+  let evo = response.data.chain;
+  let evolutions = [];
+
+  while (evo) {
+    evolutions.push(evo.species.name);
+    evo = evo.evolves_to[0];
+  }
+
+  return evolutions;
 }
