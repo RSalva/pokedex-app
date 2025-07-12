@@ -39,26 +39,29 @@ function HomePage({ pokemonsByPage = 20 }) {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    timeoutRef.current = setTimeout(() => {
-      async function fetchSearchedPokemons() {
-        setIsLoading(true);
-        try {
-          const currentPokemons = await listPokemon(
-            page * pokemonsByPage,
-            pokemonsByPage, 
-            search
-          );
-          console.debug("Current 20 pokemons:", currentPokemons);
-          const pokemonList = await getPokemonListData(currentPokemons);
-          setCurrentPokemonList(pokemonList);
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setIsLoading(false);
+    if (search !== "") {
+      timeoutRef.current = setTimeout(() => {
+        async function fetchSearchedPokemons() {
+          setIsLoading(true);
+          try {
+            const currentPokemons = await listPokemon(
+              page * pokemonsByPage,
+              pokemonsByPage, 
+              search
+            );
+            console.debug("Current X pokemons:", currentPokemons);
+            const pokemonList = await getPokemonListData(currentPokemons);
+            setCurrentPokemonList(pokemonList);
+          } catch (error) {
+            console.error(error);
+          } finally {
+            setIsLoading(false);
+          }
         }
-      }
-      fetchSearchedPokemons();
-    }, 2000);
+        fetchSearchedPokemons();
+      }, 2000);
+    } 
+    
   }, [search]);
 
   //const pokemonList = currentPokemonList.filter((p) => p.name.includes(search));

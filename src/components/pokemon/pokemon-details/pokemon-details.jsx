@@ -59,10 +59,16 @@ function pokemonDetails({ pokemon }) {
             ))}
           </div>
           <div>
-            <strong>Abilities</strong>
-            
+            <strong>Abilities: </strong>
+            {pokemon.abilities.map((ability) => (
+              <span key={ability.name} className="badge bg-dark me-1">{ability.name}</span>
+            ))}
           </div>
-          <span>Habitat</span>
+          <div>
+            <strong>Habitat: </strong>
+            <span>{pokemon.habitat}</span>
+          </div>
+          
         </div>
 
         <div className="col-md-5 d-flex align-items-center justify-content-center border rounded border-primary p-2">

@@ -32,7 +32,7 @@ function capitalize(text) {
 
 async function parsePokemon(pokemon) {
   //console.debug("Pokemon info to parse", pokemon);
-  const habitatAndDescription = await getPokemonHabitat(pokemon);
+  const habitatAndDescription = await getPokemonHabitatAndDescription(pokemon);
   return {
     id: pokemon.id,
     name: pokemon.name,
@@ -40,7 +40,7 @@ async function parsePokemon(pokemon) {
       ? pokemon.sprites.other.dream_world.front_default
       : pokemon.sprites.front_shiny,
     types: pokemon.types.map(parseType),
-    abilities: pokemon.abilities,
+    abilities: pokemon.abilities.map(parseAbility),
     cries: pokemon.cries.latest ? pokemon.cries.latest : pokemon.cries.legacy,
     height: pokemon.height,
     weight: pokemon.weight,
@@ -74,6 +74,10 @@ async function parsePokemon(pokemon) {
       ],
     },
   };
+}
+
+function parseAbility(ability) {
+  return { name: ability.ability.name, url: ability.ability.url};
 }
 
 function parseType({ type: { name } }) {
@@ -210,30 +214,38 @@ export async function filterPokemon(search, pokemonsList) {
   );
 }
 
-export async function getPokemonHabitat(pokemon) {
+export async function getPokemonHabitatAndDescription(pokemon) {
   const response = await http.get(
     `${baseApiUrl}/pokemon-species/${pokemon.species.name}`
   );
-  //console.debug("Pokemon Specie data: ", response.data);
+  console.debug("descriptions", response.data.flavor_text_entries);
   const description = response.data.flavor_text_entries.find(
     (entry) => entry.language.name === "en"
   )?.flavor_text;
-  const habitat = response.data.habitat.name;
-  return { description: description, habitat: habitat };
+  const habitat = response.data.habitat?.name;
+  return { description: description, habitat: habitat ? habitat : "Unknown" };
+  
 }
 
 export async function getPokemonChainEvolutions(pokemon) {
-  const response = await http.get(
+  try {
+    const response = await http.get(
     `${baseApiUrl}/evolution-chain/${pokemon.id}`
-  );
-  //console.debug("Pokemon chain evolutions:", response.data);
-  let evo = response.data.chain;
-  let evolutions = [];
+    )
+    let evo = response.data.chain;
+    let evolutions = [];
 
-  while (evo) {
-    evolutions.push(evo.species.name);
-    evo = evo.evolves_to[0];
+    while (evo) {
+      evolutions.push(evo.species.name);
+      evo = evo.evolves_to[0];
+    }
+
+    return evolutions;
+  } catch (error) {
+    return [];
   }
 
-  return evolutions;
+
+  //console.debug("Pokemon chain evolutions:", response.data);
+  
 }
