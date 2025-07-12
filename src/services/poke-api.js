@@ -23,7 +23,6 @@ import loadingicon from "../assets/images/loading/loading-pokeball.gif";
 const baseApiUrl = "https://pokeapi.co/api/v2";
 const instance = axios.create();
 const http = setupCache(instance, {
-  //debug: console.debug,
 });
 
 function capitalize(text) {
@@ -31,8 +30,7 @@ function capitalize(text) {
 }
 
 async function parsePokemon(pokemon) {
-  //console.debug("Pokemon info to parse", pokemon);
-  const habitatAndDescription = await getPokemonHabitatAndDescription(pokemon);
+  const extraInfo = await getPokemonExtraInfo(pokemon);
   return {
     id: pokemon.id,
     name: pokemon.name,
@@ -44,9 +42,9 @@ async function parsePokemon(pokemon) {
     cries: pokemon.cries.latest ? pokemon.cries.latest : pokemon.cries.legacy,
     height: pokemon.height,
     weight: pokemon.weight,
-    evolutions: await getPokemonChainEvolutions(pokemon),
-    habitat: habitatAndDescription.habitat,
-    description: habitatAndDescription.description,
+    evolutions: extraInfo.evolutions,
+    habitat: extraInfo.habitat,
+    description: extraInfo.description,
     statistics: {
       labels: [
         capitalize(pokemon.stats[0].stat.name),
@@ -185,7 +183,6 @@ export async function listPokemon(offset, limit, search) {
     ? http.get(`${baseApiUrl}/pokemon?limit=${limit}&offset=${offset}`)
     : http.get(`${baseApiUrl}/pokemon?limit=1302&offset=0`));
 
-  //console.debug("Main petition", response);
   const pokemonList = response.data.results;
   return search === ""
     ? pokemonList
@@ -214,24 +211,20 @@ export async function filterPokemon(search, pokemonsList) {
   );
 }
 
-export async function getPokemonHabitatAndDescription(pokemon) {
-  const response = await http.get(
-    `${baseApiUrl}/pokemon-species/${pokemon.species.name}`
-  );
-  console.debug("descriptions", response.data.flavor_text_entries);
+export async function getPokemonExtraInfo(pokemon) {
+  const response = await http.get(pokemon.species.url);
   const description = response.data.flavor_text_entries.find(
     (entry) => entry.language.name === "en"
   )?.flavor_text;
   const habitat = response.data.habitat?.name;
-  return { description: description, habitat: habitat ? habitat : "Unknown" };
+  const evolutions = await getPokemonChainEvolutions(response.data.evolution_chain.url);
+  return { description: description.replace(/[\n\f\r\t\v]/g, ' '), habitat: habitat ? habitat : "Unknown", evolutions: evolutions};
   
 }
 
-export async function getPokemonChainEvolutions(pokemon) {
+export async function getPokemonChainEvolutions(evolutionsURL) {
   try {
-    const response = await http.get(
-    `${baseApiUrl}/evolution-chain/${pokemon.id}`
-    )
+    const response = await http.get(evolutionsURL);
     let evo = response.data.chain;
     let evolutions = [];
 
@@ -243,9 +236,5 @@ export async function getPokemonChainEvolutions(pokemon) {
     return evolutions;
   } catch (error) {
     return [];
-  }
-
-
-  //console.debug("Pokemon chain evolutions:", response.data);
-  
+  }  
 }

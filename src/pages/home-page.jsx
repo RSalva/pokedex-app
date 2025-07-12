@@ -22,7 +22,6 @@ function HomePage({ pokemonsByPage = 20 }) {
           pokemonsByPage, 
           ""
         );
-        console.debug("Current 20 pokemons:", currentPokemons);
         const pokemonList = await getPokemonListData(currentPokemons);
         setCurrentPokemonList(pokemonList);
       } catch (error) {
