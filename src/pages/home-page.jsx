@@ -14,24 +14,26 @@ function HomePage({ pokemonsByPage = 20 }) {
 
   // Pagination
   useEffect(() => {
-    async function fetchPokemons() {
-      try {
-        setIsLoading(true);
-        const currentPokemons = await listPokemon(
-          page * pokemonsByPage,
-          pokemonsByPage, 
-          ""
-        );
-        const pokemonList = await getPokemonListData(currentPokemons);
-        setCurrentPokemonList(pokemonList);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
+    if (search === "") {
+      async function fetchPokemons() {
+        try {
+          setIsLoading(true);
+          const currentPokemons = await listPokemon(
+            page * pokemonsByPage,
+            pokemonsByPage, 
+            ""
+          );
+          const pokemonList = await getPokemonListData(currentPokemons);
+          setCurrentPokemonList(pokemonList);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsLoading(false);
+        }
       }
+      fetchPokemons();
     }
-    fetchPokemons();
-  }, [pokemonsByPage, page]);
+  }, [pokemonsByPage, page, search]);
 
   // Search
   useEffect(() => {

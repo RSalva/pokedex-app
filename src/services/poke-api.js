@@ -42,6 +42,7 @@ async function parsePokemon(pokemon) {
     cries: pokemon.cries.latest ? pokemon.cries.latest : pokemon.cries.legacy,
     height: pokemon.height,
     weight: pokemon.weight,
+    cries: pokemon.cries.latest,
     evolutions: extraInfo.evolutions,
     habitat: extraInfo.habitat,
     description: extraInfo.description,

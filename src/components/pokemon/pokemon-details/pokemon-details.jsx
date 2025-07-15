@@ -12,6 +12,7 @@ import PokemonCard from "../pokemon-card/pokemon-card";
 import { useEffect, useState } from "react";
 import { getPokemonById } from "../../../services/poke-api";
 import PokemonList from "../pokemon-list/pokemon-list";
+import { Link } from "react-router";
 
 function PokemonDetails({ pokemon }) {
   console.debug("Pokemon data received:", pokemon);
@@ -23,6 +24,19 @@ function PokemonDetails({ pokemon }) {
     Tooltip,
     Legend
   );
+  const [audio, setAudio] = useState(
+    new Audio(pokemon.cries)
+  );
+
+  useEffect(() => {
+    setAudio(new Audio(pokemon.cries));
+  }, [pokemon]);
+
+  const playSound = () => {
+    audio.currentTime = 0;
+    audio.volume = 0.1;
+    audio.play();
+  };
 
   const chartOptions = {
     scales: {
@@ -55,20 +69,20 @@ function PokemonDetails({ pokemon }) {
 
   return (
     <div
-      className="container border border-primary rounded text-success"
+      className="container rounded"
       style={{ backgroundColor: "white" }}
     >
-      <div className="row border rounded border-danger p-3 gap-3 d-flex flex-row">
-        <div className="col border border-success rounded d-flex flex-column justify-content-between p-2">
+      <div className="row rounded p-3 gap-3 d-flex flex-row">
+        <div className="col rounded shadow-sm d-flex flex-column justify-content-between p-2">
           <h3 className="text-capitalize font-weight-bold">{pokemon.name}</h3>
           <p className="mb-2">{pokemon.description}</p>
-          <div className="row mb-2">
-            <div className="col-md-2">
-              <small className="text-muted">Height: </small>
+          <div className="row mb-2 w-auto">
+            <div className="col-md-2 w-auto">
+              <small>Height: </small>
               {pokemon.height} m
             </div>
-            <div className="col-md-2">
-              <small className="text-muted">Weight: </small>
+            <div className="col-md-2 w-auto">
+              <small>Weight: </small>
               {pokemon.weight} Kg
             </div>
           </div>
@@ -90,18 +104,18 @@ function PokemonDetails({ pokemon }) {
           </div>
           <div>
             <strong>Habitat: </strong>
-            <span>{pokemon.habitat}</span>
+            <span className="text-capitalize">{pokemon.habitat}</span>
           </div>
         </div>
 
-        <div className="col-md-5 d-flex align-items-center justify-content-center border rounded border-primary p-2">
-          <img src={pokemon.image} />
+        <div className="col-md-5 shadow-sm d-flex align-items-center justify-content-center rounded p-2 ">
+          <img src={pokemon.image} className={"mw-100"} onClick={playSound}/>
         </div>
       </div>
 
-      <div className="row border rounded border-warning p-2 gap-2 d-flex flex-row">
-        <div className="col-md-8 border border-warning rounded d-flex flex-column justify-content-between p-2">
-          <div className="col border rounded border-primary d-flex flex-column justify-content-between gap-3">
+      <div className="row rounded p-2 gap-2 d-flex flex-row">
+        <div className="col-md-8 shadow-sm rounded d-flex flex-column justify-content-between p-2">
+          <div className="col rounded d-flex flex-column justify-content-between gap-3">
             <div className="d-flex align-items-center gap-2">
               <div className="col d-flex justify-content-end">HP</div>
               <div className="progress col-md-10">
@@ -210,18 +224,19 @@ function PokemonDetails({ pokemon }) {
             </div>
           </div>
         </div>
-        <div className="col d-flex align-items-center justify-content-center border rounded border-warning p-2">
-          <div className="border rounded border-danger d-flex align-items-center justify-content-center">
+        <div className="col d-flex shadow-sm align-items-center justify-content-center rounded p-2">
+          <div className="rounded d-flex align-items-center justify-content-center">
             <Radar options={chartOptions} data={pokemon.statistics} />
           </div>
         </div>
       </div>
 
       {pokemonList.length > 0 && (
-        <div className="row border rounded border-success p-2 gap-2 d-flex flex-row justify-content-between align-items-center">
-          <PokemonList pokemonList={pokemonList} />
+        <div className="row rounded p-2 gap-2 d-flex flex-row justify-content-between align-items-center">
+          <PokemonList pokemonList={pokemonList} className="justify-content-evenly" />
         </div>
       )}
+      
     </div>
   );
 }

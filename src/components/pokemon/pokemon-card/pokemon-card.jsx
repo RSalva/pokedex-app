@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { motion } from "motion/react";
 
 function PokemonCard({ pokemon, isLoading }) {
-  console.debug("Received pokemon data", pokemon);
+  //console.debug("Received pokemon data", pokemon);
   if (isLoading) {
     return (
       <div className="card text-center shadow-sm h-100 d-flex flex-column justify-content-between p-2">
